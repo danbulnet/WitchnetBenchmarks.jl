@@ -1,4 +1,4 @@
-name = "WitchnetBenchmarks.jl"
+name = "WitchnetBenchmarks"
 uuid = "ca00357c-5360-4a71-8428-6e20ad2e511f"
 authors = ["danbulnet <daniel@bulanda.net>"]
 version = "0.1.0"

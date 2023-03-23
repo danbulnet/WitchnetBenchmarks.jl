@@ -5,7 +5,7 @@ export Utils
 using CSV
 using DataFrames
 using Gadfly
-using PythonCall
+# using PythonCall
 # using CondaPkg
 # using Pkg
 using HTTP

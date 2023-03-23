@@ -2,7 +2,7 @@ using Test
 using RDatasets
 using MLJ
 
-using WitchnetBenchmark
+using WitchnetBenchmarks
 
 # @testset "iris" begin
 #     iris = dataset("datasets", "iris")

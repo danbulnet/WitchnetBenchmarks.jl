@@ -2,8 +2,8 @@ export Star
 
 module Star
 
-using WitchnetBenchmark
-using WitchnetBenchmark.Utils
+using WitchnetBenchmarks
+using WitchnetBenchmarks.Utils
 using RDatasets
 using DataFrames
 using CSV

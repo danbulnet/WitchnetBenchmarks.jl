@@ -6,7 +6,7 @@ include("predeval.jl")
 include("plots.jl")
 include("models.jl")
 include("benchmarks/Benchmarks.jl")
-include("PMLB.jl")
+include("PMLB/PMLB.jl")
 
 end # module WitchnetBenchmark
 # acceleration=CUDALibs()

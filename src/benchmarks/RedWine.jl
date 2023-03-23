@@ -2,8 +2,8 @@ export RedWine
 
 module RedWine
 
-using WitchnetBenchmark
-using WitchnetBenchmark.Utils
+using WitchnetBenchmarks
+using WitchnetBenchmarks.Utils
 using RDatasets
 using DataFrames
 using MLJ

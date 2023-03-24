@@ -9,6 +9,7 @@ include("WhiteWine.jl")
 include("RedWine.jl")
 include("BostonHousing.jl")
 include("Diamond.jl")
+include("Penn.jl")
 
 ALL_DATASETS = [
     Iris,

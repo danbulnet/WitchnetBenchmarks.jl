@@ -1,10 +1,11 @@
-export pred, predeval, evalmodels
+export pred, predeval, evalmodels, ttindices
 
 using DataFrames
 using CSV
 
 import Random
 import MLJ
+import CategoricalArrays
 import CategoricalArrays.CategoricalValue
 import StatsBase
 
@@ -86,14 +87,27 @@ nrmse(ŷtest, ytest) = MLJ.rmse(ŷtest, ytest) / StatsBase.iqr(ytest)
 
 function evalmodels(
     data::DataFrame, target::Symbol, models::Dict, metric::Symbol;
-    ttratio=0.7, seed=58
+    ttratio=0.7, seed=58, standarize=true, onehot=true
 )::DataFrame
     MLJ.default_resource(CPUProcesses())
 
     y, X = MLJ.unpack(data, ==(target), colname -> true)
 
-    encodermach = MLJ.machine(MLJ.ContinuousEncoder(), X) |> MLJ.fit!
-    Xencoded = MLJ.transform(encodermach, X)
+    if metric == :accuracy
+        y = CategoricalArrays.categorical(string.(y))
+    end
+
+    if standarize
+        standarizer = MLJ.Standardizer()
+        X = MLJ.transform(MLJ.fit!(MLJ.machine(standarizer, X)), X)
+    end
+
+    if onehot
+        X = MLJ.coerce(X, Count => Multiclass)
+        hot = MLJ.OneHotEncoder(drop_last=true, ordered_factor=false)
+        mach = MLJ.fit!(MLJ.machine(hot, X))
+        X = MLJ.transform(mach, X)
+    end
 
     benchmarks = ModelsBenchmark(metric)
 
@@ -139,7 +153,7 @@ function evalmodels(
         else
             time = @elapsed begin
                 mem = @allocated result = predeval(
-                    model, Xencoded, y, metric; ttratio=ttratio, seed=seed
+                    model, X, y, metric; ttratio=ttratio, seed=seed
                 )
             end
             asyncadd(benchmarks, ModelBenchmark(name, result, time, mem))

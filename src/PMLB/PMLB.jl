@@ -157,7 +157,7 @@ Load Penn Machine Learning Benchmark datasets.
 """
 function loaddata(;
     task::Symbol=:all,
-    _cluster::Symbol=:all,
+    cluster::Symbol=:all,
     limit::Union{Int, Nothing}=nothing
 )::Dict{Symbol, DataFrame}
     dirs = if task == :classification

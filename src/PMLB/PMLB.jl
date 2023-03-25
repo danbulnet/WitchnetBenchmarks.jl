@@ -39,7 +39,7 @@ function preparedata()
                                 end
                             end
                         end
-                        @info("  $(i): $(chop(file, tail=3))")
+                        @info("  $(i): $(tsv2name(file))")
                     else
                         @warn("$file in $datadir is not a file, skipping")
                     end
@@ -58,7 +58,7 @@ function statistics()
         if !(eltype(df.target) <: Integer)
             df[!, :target] = parse.(Int64, df.target)
         end
-        Symbol(chop(filename, tail=4)) => df
+        Symbol(tsv2name(filename)) => df
     end |> Dict{Symbol, DataFrame}
     rdfs = map(readdir(REGRESSION_DIR)) do filename
         df = CSV.File(joinpath(REGRESSION_DIR, filename)) |> DataFrame
@@ -69,7 +69,7 @@ function statistics()
                 df[!, :target] = parse.(Float64, df.target)
             end
         end
-        Symbol(chop(filename, tail=4)) => df
+        Symbol(tsv2name(filename)) => df
     end |> Dict{Symbol, DataFrame}
 
     @info("calculating statistics for classification datasets")
@@ -78,9 +78,9 @@ function statistics()
     rstatsdf = statsdf(keys(rdfs), values(rdfs))
     allstatsdf = vcat(cstatsdf, rstatsdf)
 
-    CSV.write(joinpath(DATA_DIR, "classification_statistics.tsv"), cstatsdf)
-    CSV.write(joinpath(DATA_DIR, "regression_statistics.tsv"), rstatsdf)
-    CSV.write(joinpath(DATA_DIR, "all_statistics.tsv"), allstatsdf)
+    CSV.write(joinpath(DATA_DIR, "classification_statistics.csv"), cstatsdf)
+    CSV.write(joinpath(DATA_DIR, "regression_statistics.csv"), rstatsdf)
+    CSV.write(joinpath(DATA_DIR, "all_statistics.csv"), allstatsdf)
 
     allstatsdf, cstatsdf, rstatsdf
 end
@@ -139,7 +139,7 @@ end
 function loaddf(name::String)::Union{DataFrame, Nothing}
     for dir in [CLASSIFICATION_DIR, REGRESSION_DIR]
         for file in readdir(dir)
-            if chop(file, tail=4) == name
+            if tsv2name(file) == name
                 return CSV.File(joinpath(dir, file)) |> DataFrame
             end
         end
@@ -152,25 +152,51 @@ Load Penn Machine Learning Benchmark datasets.
 # Arguments:
 - `task::Symbol`: one of `[:all, :classification, :regression]`.
 - `cluster::Symbol`: one of `[:all]`.
-- `limit::Union{UInt, Nothing}=nothing`: pick datasets with number of records
-    less than `limit`, no limit by default.
+- `limit::Union{Int, Nothing}=nothing`: pick datasets with number of records 
+    less than or equal to `limit`, no limit by default.
 """
 function loaddata(;
     task::Symbol=:all,
-    cluster::Symbol=:all,
-    limit::Union{UInt, Nothing}=nothing
-)::Dict{String, DataFrame}
+    _cluster::Symbol=:all,
+    limit::Union{Int, Nothing}=nothing
+)::Dict{Symbol, DataFrame}
+    dirs = if task == :classification
+        [CLASSIFICATION_DIR]
+    elseif task == :regression
+        [REGRESSION_DIR]
+    else
+        [CLASSIFICATION_DIR, REGRESSION_DIR]
+    end
 
+    stats = loadstats(task)
+    toload = if isnothing(limit)
+        stats.name
+    else
+        stats[stats.records .<= limit, :name]
+    end
+
+    result = Dict()
+    for dir in dirs
+        for file in readdir(dir)
+            setname = tsv2name(file)
+            if setname in toload
+                result[Symbol(setname)] = CSV.File(joinpath(dir, file)) |> DataFrame
+            end
+        end
+    end
+    result
 end
 
-function loadstats(type=:all)::DataFrame
-    if type == :classification
-        CSV.File(joinpath(DATA_DIR, "classification_statistics.tsv")) |> DataFrame
-    elseif type == :regression
-        CSV.File(joinpath(DATA_DIR, "regression_statistics.tsv")) |> DataFrame
+function loadstats(task=:all)::DataFrame
+    if task == :classification
+        CSV.File(joinpath(DATA_DIR, "classification_statistics.csv")) |> DataFrame
+    elseif task == :regression
+        CSV.File(joinpath(DATA_DIR, "regression_statistics.csv")) |> DataFrame
     else
-        CSV.File(joinpath(DATA_DIR, "all_statistics.tsv")) |> DataFrame
+        CSV.File(joinpath(DATA_DIR, "all_statistics.csv")) |> DataFrame
     end
 end
+
+tsv2name(file::String)::String = chop(file, tail=4)
 
 end

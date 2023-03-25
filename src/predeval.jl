@@ -98,14 +98,14 @@ function evalmodels(
     end
 
     if standarize
-        standarizer = MLJ.Standardizer()
+        standarizer = MLJ.Standardizer(count=false)
         X = MLJ.transform(MLJ.fit!(MLJ.machine(standarizer, X)), X)
     end
 
     if onehot
         X = MLJ.coerce(X, Count => Multiclass)
-        hot = MLJ.OneHotEncoder(drop_last=true, ordered_factor=false)
-        mach = MLJ.fit!(MLJ.machine(hot, X))
+        # X = MLJ.coerce(X, Count => OrderedFactor)
+        mach = MLJ.fit!(MLJ.machine(MLJ.OneHotEncoder(ordered_factor=false, drop_last=false), X))
         X = MLJ.transform(mach, X)
     end
 

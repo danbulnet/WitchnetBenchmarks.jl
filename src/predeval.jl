@@ -187,6 +187,9 @@ function magds_grid(
     signal_similarity_threshold=[0.0, 0.97]
 )
     datav2 = mapcols(col -> eltype(col) <: CategoricalValue ? string.(col) : col , data)
+    if metric == :accuracy
+        datav2[!, :target] = string.(datav2.target) .* "_class"
+    end
 
     tmpdir = "evalmodels_temp"
     mkpath(tmpdir)

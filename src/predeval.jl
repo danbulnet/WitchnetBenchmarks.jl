@@ -94,7 +94,7 @@ function evalmodels(
     y, X = MLJ.unpack(data, ==(target), colname -> true)
 
     if metric == :accuracy
-        y = CategoricalArrays.categorical(string.(y))
+        y = CategoricalArrays.categorical(y)
     end
 
     if standarize
@@ -151,12 +151,16 @@ function evalmodels(
             magds_grid(data, target, metric, benchmarks, ttratio, seed)
             Logging.disable_logging(Logging.Warn)
         else
-            time = @elapsed begin
-                mem = @allocated result = predeval(
-                    model, X, y, metric; ttratio=ttratio, seed=seed
-                )
+            try
+                time = @elapsed begin
+                    mem = @allocated result = predeval(
+                        model, X, y, metric; ttratio=ttratio, seed=seed
+                    )
+                end
+                asyncadd(benchmarks, ModelBenchmark(name, result, time, mem))
+            catch e
+                @error "error predicting $name, skipping, error:\n$e\n"
             end
-            asyncadd(benchmarks, ModelBenchmark(name, result, time, mem))
         end
     end
 

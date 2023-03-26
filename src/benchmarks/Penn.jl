@@ -23,11 +23,11 @@ function classify(;
     data = PMLB.loaddata(task=:classification, cluster=cluster, limit=limit)
     results = Dict{Symbol, DataFrame}()
     for (name, df) in data
-        # Logging.disable_logging(Logging.Debug)
+        Logging.disable_logging(Logging.Debug)
         @info "$name classification"
-        # Logging.disable_logging(Logging.Warn)
+        Logging.disable_logging(Logging.Warn)
 
-        # redirect_stdout(devnull) do
+        redirect_stdout(devnull) do
             if savett
                 train, test = ttindices(df[:, :target], ttratio; seed=seed)
 
@@ -50,7 +50,7 @@ function classify(;
             )
             Utils.writecsv(result, "penn", "classification", name)
             results[name] = result
-        # end
+        end
     end
     results
 end

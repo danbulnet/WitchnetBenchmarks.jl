@@ -55,7 +55,7 @@ end
         predictmlj(modelfactory, X, y)
 """
 function pred(modelfactory, X, y, measure; ttratio=0.7, seed=58)
-    outs = measure in [:rmse, :mae] ? 1 : length(unique(y))
+    outs = measure in [:accuracy] ? length(unique(y)) : 1
     model = modelfactory(ncol(X), outs)
     mach = MLJ.machine(model, X, y)
 

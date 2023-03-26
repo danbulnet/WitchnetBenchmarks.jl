@@ -20,8 +20,8 @@ fast_classification_models() = Dict(
 		(ins, outs) -> @load(DecisionTreeClassifier, pkg=DecisionTree, verbosity=false)(),
 	:RandomForestClassifier_DecisionTree => 
 		(ins, outs) -> @load(RandomForestClassifier, pkg=DecisionTree, verbosity=false)(),
-	:XGBoostClassifier_XGBoost => 
-		(ins, outs) -> @load(XGBoostClassifier, pkg=XGBoost, verbosity=false)(),
+	# :XGBoostClassifier_XGBoost => 
+	# 	(ins, outs) -> @load(XGBoostClassifier, pkg=XGBoost, verbosity=false)(),
 	:EvoTreeClassifier_EvoTrees => 
         (ins, outs) -> @load(EvoTreeClassifier, pkg=EvoTrees, verbosity=false)(),
     :KNNClassifier_NearestNeighborModels =>
@@ -84,8 +84,8 @@ fast_regression_models() = Dict(
 		(ins, outs) -> @load(DecisionTreeRegressor, pkg=DecisionTree, verbosity=false)(),
 	:RandomForestRegressor_DecisionTree => 
 		(ins, outs) -> @load(RandomForestRegressor, pkg=DecisionTree, verbosity=false)(),
-	:XGBoostRegressor_XGBoost => 
-		(ins, outs) -> @load(XGBoostRegressor, pkg=XGBoost, verbosity=false)(),
+	# :XGBoostRegressor_XGBoost => 
+	# 	(ins, outs) -> @load(XGBoostRegressor, pkg=XGBoost, verbosity=false)(),
     :EvoTreeRegressor_EvoTrees => 
         (ins, outs) -> @load(EvoTreeRegressor, pkg=EvoTrees, verbosity=false)(),
     :KNNRegressor_NearestNeighborModels =>

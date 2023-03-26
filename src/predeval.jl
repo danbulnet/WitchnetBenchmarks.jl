@@ -159,7 +159,7 @@ function evalmodels(
                 end
                 asyncadd(benchmarks, ModelBenchmark(name, result, time, mem))
             catch e
-                @error "error predicting $name, skipping, error:\n$e\n"
+                @error "error predicting $name, skipping"
             end
         end
     end

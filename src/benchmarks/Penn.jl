@@ -12,8 +12,6 @@ import WitchnetBenchmarks.PMLB
 
 const TRAIN_TEST_DATA_DIR = "data/PMLB_train_test"
 
-classifylock = ReentrantLock()
-
 "classification task on the boston housing dataset"
 function classify(;
     cluster::Symbol=:all,
@@ -24,7 +22,7 @@ function classify(;
 )::Dict{Symbol, DataFrame}
     data = PMLB.loaddata(task=:classification, cluster=cluster, limit=limit)
     results = Dict{Symbol, DataFrame}()
-    Threads.@threads for (name, df) in data
+    for (name, df) in data
         Logging.disable_logging(Logging.Debug)
         @info "$name classification"
         Logging.disable_logging(Logging.Warn)
@@ -51,12 +49,7 @@ function classify(;
                 standarize=standarize, onehot=onehot
             )
             Utils.writecsv(result, "penn", "classification", name)
-            lock(classifylock)
-            try
-                results[name] = result
-            finally
-                unlock(classifylock)
-            end
+            results[name] = result
         end
     end
     results

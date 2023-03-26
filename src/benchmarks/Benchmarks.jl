@@ -1,4 +1,7 @@
-export warmup, predictall, classifyall, estimateall, summarizeall
+export warmup, predictall, classifyall, estimateall, 
+    summarizeall, collectbenchmarks, summarizeclassification
+
+using Statistics
 
 import Logging
 
@@ -77,6 +80,51 @@ function estimateall(
         end
     end
     results
+end
+
+function collectbenchmarks(dataset::String="penn")::Dict{Symbol, DataFrame}
+    results = Dict{Symbol, DataFrame}()
+    benchmarkdir = joinpath(Utils.BENCHMARK_DIR, dataset)
+    for file in readdir(benchmarkdir)
+        df = CSV.File(joinpath(benchmarkdir, file)) |> DataFrame
+        results[Symbol(chop(file, tail=4))] = df
+    end
+    results
+end
+
+function summarizeclassification(
+    results::Dict{Symbol, DataFrame};
+    save2csv::Union{String, Nothing}=nothing
+)::DataFrame
+    accuracy = Dict{String, Vector{Float64}}()
+    time = Dict{String, Vector{Float64}}()
+    memory = Dict{String, Vector{Float64}}()
+    for benchmark in values(results)
+        for row in eachrow(benchmark)
+            if haskey(accuracy, row.model)
+                push!(accuracy[row.model], row.accuracy)
+                push!(time[row.model], row.time)
+                push!(memory[row.model], row.memory)
+            else
+                accuracy[row.model] = [row.accuracy]
+                time[row.model] = [row.time]
+                memory[row.model] = [row.memory]
+            end
+        end
+    end
+    models = sort!(collect(keys(accuracy)))
+    df = DataFrame(
+        :model => models,
+        :accuracy => map(model -> mean(accuracy[model]), models),
+        :time => map(model -> mean(time[model]), models),
+        :memory => map(model -> mean(memory[model]), models),
+        :evaluated_datasets => map(model -> length(accuracy[model]), models),
+    )
+    sort!(df, [:accuracy, :time, :memory], rev=true)
+    if !isnothing(save2csv)
+        CSV.write(save2csv, df)
+    end
+    df
 end
 
 function summarizeall(results=predictall())::Dict{Symbol, DataFrame}

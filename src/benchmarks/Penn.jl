@@ -21,8 +21,10 @@ function classify(;
     ttratio=0.7, seed=58, standarize=true, onehot=false, savett=false
 )::Dict{Symbol, DataFrame}
     data = PMLB.loaddata(task=:classification, cluster=cluster, limit=limit)
-    results = Dict{Symbol, DataFrame}()
-    for (name, df) in data
+    resultslock = ReentrantLock()
+    # results = Dict{Symbol, DataFrame}()
+    results = []
+    Threads.@threads for (name, df) in collect(data)
         Logging.disable_logging(Logging.Debug)
         @info "$name classification"
         Logging.disable_logging(Logging.Warn)
@@ -49,10 +51,14 @@ function classify(;
                 standarize=standarize, onehot=onehot
             )
             Utils.writecsv(result, "penn", "classification", name)
-            results[name] = result
+            lock(resultslock) do
+                push!(results, (name => result))
+            end
+            # results[name] = result
         end
     end
-    results
+    # results
+    Dict{Symbol, DataFrame}(results...)
 end
 
 "regression task on the boston housing dataset"

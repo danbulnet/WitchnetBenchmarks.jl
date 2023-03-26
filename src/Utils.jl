@@ -13,8 +13,10 @@ using HTTP
 # CondaPkg.add("cairosvg")
 # Pkg.build("PyCall")
 
+BENCHMARK_DIR = "benchmark"
+
 function writecsv(df::DataFrame, dataset::String, d1, d2)
-    path = normpath(joinpath(@__DIR__, "..", "benchmark", dataset))
+    path = normpath(joinpath(@__DIR__, "..", BENCHMARK_DIR, dataset))
     mkpath(path)
     filename = lowercase(string(dataset, "_", string(d1), "_",  string(d2),".csv"))
     CSV.write(joinpath(path, filename), df)

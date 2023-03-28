@@ -70,9 +70,9 @@ function estimate(;
     measure::Symbol=:nrmse,
     models=fast_regression_models(),
     ttratio=0.7, seed=58, standarize=true, onehot=false, savett=false
-)::DataFrame
+)::Dict{Symbol, DataFrame}
     data = PMLB.loaddata(task=:regression, cluster=cluster, limit=limit)
-    results = Dict{Symbol, DataFrame}()
+    results = []
     for (name, df) in data
         Logging.disable_logging(Logging.Debug)
         @info "$name classification"
@@ -91,8 +91,8 @@ function estimate(;
                 trainpath = joinpath(ttdir, "$(lname)_train.csv")
                 testpath = joinpath(ttdir, "$(lname)_test.csv")
 
-                CSV.write(trainpath, datav2[train, :])
-                CSV.write(testpath, datav2[test, :])
+                CSV.write(trainpath, df[train, :])
+                CSV.write(testpath, df[test, :])
             end
             result = evalmodels(
                 df, :target, models, measure; 
@@ -100,10 +100,10 @@ function estimate(;
                 standarize=standarize, onehot=onehot
             )
             Utils.writecsv(result, "penn", "regression", name)
-            results[name] = result
+            push!(results, (name => result))
         end
     end
-    results
+    Dict{Symbol, DataFrame}(results...)
 end
 
 end

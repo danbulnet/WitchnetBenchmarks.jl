@@ -1,5 +1,5 @@
 export warmup, predictall, classifyall, estimateall, 
-    summarizeall, collectbenchmarks, summarizeclassification
+    summarizeall, collectbenchmarks, summarizeclassification, filterbest
 
 using Statistics
 
@@ -184,4 +184,17 @@ function summarizeall(results=predictall())::Dict{Symbol, DataFrame}
         :classificationmean => classificationmean,
         :regressionmean => regressionmean
     )
+end
+
+function filterbest(
+    df::DataFrame, prefix::String="MAGDS"; measure::Symbol=:accuracy, simplify=true
+)::DataFrame
+    df = sort(df, [measure], rev=true)
+    result = df[(!).(startswith.(string.(df.model), prefix)), :]
+    winner = df[startswith.(string.(df.model), prefix), :][1, :]
+    if simplify
+        winner.model = prefix
+    end
+    push!(result, winner)
+    sort!(result, [measure], rev=true)
 end

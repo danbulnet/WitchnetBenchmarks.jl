@@ -113,22 +113,26 @@ function evalmodels(
 
     Threads.@threads for (name, model) in collect(models)
         if name == :MAGDS
-            Logging.disable_logging(Logging.Debug)
-            magds_grid(
-                data, target, metric, benchmarks, ttratio, seed;
-                weightingstrategy=["ConstantOneWeight", "OneOverOutsUpperHalf"],
-                fuzzy=[true, false],
-                weighted=[true, false],
-                ieth=[0.00001],
-                iee=[0, 1],
-                winnerslimit=[500],
-                weightratio=[1.1, 1.5],
-                alpha=[0.1, 0.01, 0.001],
-                epoch=[0, 1, 3],
-                include_input_sensor_priority=[true, false],
-                signal_similarity_threshold=[0.0, 0.97]
-            )
-            Logging.disable_logging(Logging.Warn)
+            try
+                Logging.disable_logging(Logging.Debug)
+                magds_grid(
+                    data, target, metric, benchmarks, ttratio, seed;
+                    weightingstrategy=["ConstantOneWeight", "OneOverOutsUpperHalf"],
+                    fuzzy=[true, false],
+                    weighted=[true, false],
+                    ieth=[0.00001],
+                    iee=[0, 1],
+                    winnerslimit=[500],
+                    weightratio=[1.1, 1.5],
+                    alpha=[0.1, 0.01, 0.001],
+                    epoch=[0, 1, 3],
+                    include_input_sensor_priority=[true, false],
+                    signal_similarity_threshold=[0.0, 0.97]
+                )
+                Logging.disable_logging(Logging.Warn)
+            catch e
+                @error "error predicting $name, skipping"
+            end  
         elseif name == :MAGDS_one
             Logging.disable_logging(Logging.Debug)
             magds_grid(

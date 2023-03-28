@@ -25,3 +25,6 @@ Manifest.toml
 
 # Penn train-test data
 data/PMLB_train_test
+
+# Benchmark results
+benchmark

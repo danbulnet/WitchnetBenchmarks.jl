@@ -24,7 +24,8 @@ function classify(;
     resultslock = ReentrantLock()
     # results = Dict{Symbol, DataFrame}()
     results = []
-    Threads.@threads for (name, df) in collect(data)
+    # Threads.@threads for (name, df) in collect(data)
+    for (name, df) in collect(data)
         Logging.disable_logging(Logging.Debug)
         @info "$name classification"
         Logging.disable_logging(Logging.Warn)
@@ -51,9 +52,10 @@ function classify(;
                 standarize=standarize, onehot=onehot
             )
             Utils.writecsv(result, "penn", "classification", name)
-            lock(resultslock) do
-                push!(results, (name => result))
-            end
+            # lock(resultslock) do
+            #     push!(results, (name => result))
+            # end
+            push!(results, (name => result))
             # results[name] = result
         end
     end

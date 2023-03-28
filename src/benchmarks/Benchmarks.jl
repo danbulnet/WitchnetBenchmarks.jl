@@ -96,19 +96,35 @@ function summarizeclassification(
     results::Dict{Symbol, DataFrame};
     save2csv::Union{String, Nothing}=nothing
 )::DataFrame
-    accuracy = Dict{String, Vector{Float64}}()
-    time = Dict{String, Vector{Float64}}()
-    memory = Dict{String, Vector{Float64}}()
+    accuracy = Dict{Symbol, Vector{Float64}}()
+    time = Dict{Symbol, Vector{Float64}}()
+    memory = Dict{Symbol, Vector{Float64}}()
     for benchmark in values(results)
         for row in eachrow(benchmark)
-            if haskey(accuracy, row.model)
-                push!(accuracy[row.model], row.accuracy)
-                push!(time[row.model], row.time)
-                push!(memory[row.model], row.memory)
+            model = Symbol(row.model)
+            accuracyvalue = if typeof(row.accuracy) <: Float64
+                row.accuracy
             else
-                accuracy[row.model] = [row.accuracy]
-                time[row.model] = [row.time]
-                memory[row.model] = [row.memory]
+                parse(Float64, row.accuracy)
+            end
+            timevalue = if typeof(row.time) <: Float64
+                row.time
+            else
+                parse(Float64, row.time)
+            end
+            memoryvalue = if typeof(row.memory) <: Float64
+                row.memory
+            else
+                parse(Float64, row.memory)
+            end
+            if haskey(accuracy, model)
+                push!(accuracy[model], accuracyvalue)
+                push!(time[model], timevalue)
+                push!(memory[model], memoryvalue)
+            else
+                accuracy[model] = [accuracyvalue]
+                time[model] = [timevalue]
+                memory[model] = [memoryvalue]
             end
         end
     end

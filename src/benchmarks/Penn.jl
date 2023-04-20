@@ -75,7 +75,7 @@ function estimate(;
     results = []
     for (name, df) in data
         Logging.disable_logging(Logging.Debug)
-        @info "$name classification"
+        @info "$name regression"
         Logging.disable_logging(Logging.Warn)
 
         redirect_stdout(devnull) do

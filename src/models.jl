@@ -36,7 +36,7 @@ fast_classification_models() = Dict(
 
 function fast_classification_models_magds()
     models = fast_classification_models()
-    models[:MAGDS] = () -> nothing
+    models[:MAGDS_one] = () -> nothing
     models
 end
 
@@ -60,7 +60,7 @@ end
 
 function classification_models_magds()
     models = classification_models()
-    models[:MAGDS] = () -> nothing
+    models[:MAGDS_one] = () -> nothing
     models
 end
 
@@ -98,7 +98,7 @@ fast_regression_models() = Dict(
 
 function fast_regression_models_magds()
     models = fast_regression_models()
-    models[:MAGDS] = () -> nothing
+    models[:MAGDS_one] = () -> nothing
     models
 end
 
@@ -121,7 +121,7 @@ end
 
 function regression_models_magds()
     models = regression_models()
-    models[:MAGDS] = () -> nothing
+    models[:MAGDS_one] = () -> nothing
     models
 end
 

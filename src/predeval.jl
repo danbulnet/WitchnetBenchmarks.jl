@@ -141,13 +141,13 @@ function evalmodels(
                 fuzzy=[true],
                 weighted=[true],
                 ieth=[0.00001],
-                iee=[2],
+                iee=[0],
                 winnerslimit=[500],
                 weightratio=[1.1],
-                alpha=[0.0001],
-                epoch=[1],
-                include_input_sensor_priority=[false],
-                signal_similarity_threshold=[0.0]
+                alpha=[0.01],
+                epoch=[3],
+                include_input_sensor_priority=[true],
+                signal_similarity_threshold=[0.97]
             )
             Logging.disable_logging(Logging.Warn)
         elseif name == :MAGDS_gridsearch

@@ -1,5 +1,6 @@
 export warmup, predictall, classifyall, estimateall, 
-    summarizeall, collectbenchmarks, summarizeclassification, filterbest
+    summarizeall, summarizeclassification, summarizeregression, 
+    collectbenchmarks, filterbest
 
 using Statistics
 
@@ -137,6 +138,57 @@ function summarizeclassification(
         :evaluated_datasets => map(model -> length(accuracy[model]), models),
     )
     sort!(df, [:accuracy, :time, :memory], rev=true)
+    if !isnothing(save2csv)
+        CSV.write(save2csv, df)
+    end
+    df
+end
+
+function summarizeregression(
+    results::Dict{Symbol, DataFrame};
+    save2csv::Union{String, Nothing}=nothing
+)::DataFrame
+    nrmse = Dict{Symbol, Vector{Float64}}()
+    time = Dict{Symbol, Vector{Float64}}()
+    memory = Dict{Symbol, Vector{Float64}}()
+    for benchmark in values(results)
+        for row in eachrow(benchmark)
+            model = Symbol(row.model)
+            nrmsevalue = if typeof(row.nrmse) <: Float64
+                row.nrmse
+            else
+                parse(Float64, row.nrmse)
+            end
+            timevalue = if typeof(row.time) <: Float64
+                row.time
+            else
+                parse(Float64, row.time)
+            end
+            memoryvalue = if typeof(row.memory) <: Float64
+                row.memory
+            else
+                parse(Float64, row.memory)
+            end
+            if haskey(nrmse, model)
+                push!(nrmse[model], nrmsevalue)
+                push!(time[model], timevalue)
+                push!(memory[model], memoryvalue)
+            else
+                nrmse[model] = [nrmsevalue]
+                time[model] = [timevalue]
+                memory[model] = [memoryvalue]
+            end
+        end
+    end
+    models = sort!(collect(keys(nrmse)))
+    df = DataFrame(
+        :model => models,
+        :nrmse => map(model -> mean(nrmse[model]), models),
+        :time => map(model -> mean(time[model]), models),
+        :memory => map(model -> mean(memory[model]), models),
+        :evaluated_datasets => map(model -> length(nrmse[model]), models),
+    )
+    sort!(df, [:nrmse, :time, :memory], rev=true)
     if !isnothing(save2csv)
         CSV.write(save2csv, df)
     end

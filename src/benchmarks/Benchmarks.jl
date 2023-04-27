@@ -95,37 +95,40 @@ end
 
 function summarizeclassification(
     results::Dict{Symbol, DataFrame};
-    save2csv::Union{String, Nothing}=nothing
+    save2csv::Union{String, Nothing}=nothing,
+    dataset_filter::Vector{Symbol}=[]
 )::DataFrame
     accuracy = Dict{Symbol, Vector{Float64}}()
     time = Dict{Symbol, Vector{Float64}}()
     memory = Dict{Symbol, Vector{Float64}}()
-    for benchmark in values(results)
-        for row in eachrow(benchmark)
-            model = Symbol(row.model)
-            accuracyvalue = if typeof(row.accuracy) <: Float64
-                row.accuracy
-            else
-                parse(Float64, row.accuracy)
-            end
-            timevalue = if typeof(row.time) <: Float64
-                row.time
-            else
-                parse(Float64, row.time)
-            end
-            memoryvalue = if typeof(row.memory) <: Float64
-                row.memory
-            else
-                parse(Float64, row.memory)
-            end
-            if haskey(accuracy, model)
-                push!(accuracy[model], accuracyvalue)
-                push!(time[model], timevalue)
-                push!(memory[model], memoryvalue)
-            else
-                accuracy[model] = [accuracyvalue]
-                time[model] = [timevalue]
-                memory[model] = [memoryvalue]
+    for (name, benchmark) in results
+        if isempty(dataset_filter) || name in dataset_filter
+            for row in eachrow(benchmark)
+                model = Symbol(row.model)
+                accuracyvalue = if typeof(row.accuracy) <: Float64
+                    row.accuracy
+                else
+                    parse(Float64, row.accuracy)
+                end
+                timevalue = if typeof(row.time) <: Float64
+                    row.time
+                else
+                    parse(Float64, row.time)
+                end
+                memoryvalue = if typeof(row.memory) <: Float64
+                    row.memory
+                else
+                    parse(Float64, row.memory)
+                end
+                if haskey(accuracy, model)
+                    push!(accuracy[model], accuracyvalue)
+                    push!(time[model], timevalue)
+                    push!(memory[model], memoryvalue)
+                else
+                    accuracy[model] = [accuracyvalue]
+                    time[model] = [timevalue]
+                    memory[model] = [memoryvalue]
+                end
             end
         end
     end
@@ -146,37 +149,40 @@ end
 
 function summarizeregression(
     results::Dict{Symbol, DataFrame};
-    save2csv::Union{String, Nothing}=nothing
+    save2csv::Union{String, Nothing}=nothing,
+    dataset_filter::Vector{Symbol}=[]
 )::DataFrame
     nrmse = Dict{Symbol, Vector{Float64}}()
     time = Dict{Symbol, Vector{Float64}}()
     memory = Dict{Symbol, Vector{Float64}}()
-    for benchmark in values(results)
-        for row in eachrow(benchmark)
-            model = Symbol(row.model)
-            nrmsevalue = if typeof(row.nrmse) <: Float64
-                row.nrmse
-            else
-                parse(Float64, row.nrmse)
-            end
-            timevalue = if typeof(row.time) <: Float64
-                row.time
-            else
-                parse(Float64, row.time)
-            end
-            memoryvalue = if typeof(row.memory) <: Float64
-                row.memory
-            else
-                parse(Float64, row.memory)
-            end
-            if haskey(nrmse, model)
-                push!(nrmse[model], nrmsevalue)
-                push!(time[model], timevalue)
-                push!(memory[model], memoryvalue)
-            else
-                nrmse[model] = [nrmsevalue]
-                time[model] = [timevalue]
-                memory[model] = [memoryvalue]
+    for (name, benchmark) in results
+        if isempty(dataset_filter) || name in dataset_filter
+            for row in eachrow(benchmark)
+                model = Symbol(row.model)
+                nrmsevalue = if typeof(row.nrmse) <: Float64
+                    row.nrmse
+                else
+                    parse(Float64, row.nrmse)
+                end
+                timevalue = if typeof(row.time) <: Float64
+                    row.time
+                else
+                    parse(Float64, row.time)
+                end
+                memoryvalue = if typeof(row.memory) <: Float64
+                    row.memory
+                else
+                    parse(Float64, row.memory)
+                end
+                if haskey(nrmse, model)
+                    push!(nrmse[model], nrmsevalue)
+                    push!(time[model], timevalue)
+                    push!(memory[model], memoryvalue)
+                else
+                    nrmse[model] = [nrmsevalue]
+                    time[model] = [timevalue]
+                    memory[model] = [memoryvalue]
+                end
             end
         end
     end

@@ -80,6 +80,20 @@ begin
 	bestmagds = cbench_all_df.model[index]
 end
 
+# ╔═╡ f4587166-bb8e-45f0-8c8f-e6754c8d458f
+begin
+	cbench_best_path = joinpath(
+		rootdir, "benchmark/penn/penn_classification_magds_1k_best.csv"
+	) |> normpath
+	cbench_best_df = CSV.File(cbench_best_path) |> DataFrame
+	modelsmap = Dict()
+	models = map(cbench_best_df.model) do name
+		shotname = Symbol.(split(lowercase(name), "classifier_")[1])
+		modelsmap[shotname] = name
+		shotname
+	end
+end
+
 # ╔═╡ 99a8addd-1c86-4a13-b48f-a1cfe50e530a
 cstats = CSV.File(joinpath(datadir, "classification_statistics.csv")) |> DataFrame
 
@@ -92,23 +106,73 @@ begin
 end
 
 # ╔═╡ 999848fc-604c-4d4b-8080-578e689d8967
-cstats_filtered.accuracy = zeros(nrow(cstats_filtered))
+for model in models
+	cstats_filtered[!, Symbol("$(model)_accuracy")] = zeros(nrow(cstats_filtered))
+end
 
 # ╔═╡ bd3989a2-4ac8-46c2-8680-77856755c383
-for (dataset, results) in cbench
-	cstats_filtered[
-		cstats_filtered.name .== dataset, :accuracy
-	] = results[results.model .== bestmagds, :accuracy]
+for model in models
+	for (dataset, results) in cbench
+		cstats_filtered[
+			cstats_filtered.name .== dataset, Symbol("$(model)_accuracy")
+		] = if model == :magds
+			results[results.model .== bestmagds, :accuracy]
+		else
+			accuracy = results[results.model .== modelsmap[model], :accuracy]
+			if isempty(accuracy) 
+				# [0.0] # error
+				cbench_best_df[cbench_best_df.model .== modelsmap[model], :accuracy] # error
+			else 
+				accuracy
+			end
+		end
+	end
 end
+
+# ╔═╡ ea7f8176-0fcc-4ec1-b73a-2d8bb7e554c4
+cstats_filtered
 
 # ╔═╡ 96475426-fa8f-452a-89bb-a2babbefa8bd
 begin
-	@df cstats_filtered corrplot(cols(2:ncol(cstats_filtered)), grid = false)
+	@df cstats_filtered corrplot(cols(vcat(2:8, [11])), grid = false)
 	plot!(size=(1200, 1100), xtickfontsize=5, ytickfontsize=5, xguidefontsize=8, yguidefontsize=8, left_margin = 3mm)
 end
 
 # ╔═╡ 4a045390-5041-45dc-a465-7b1df189eba4
+begin
+	featurescorr = []
+	recordscorr = []
+	unique_target_features_corr = []
+	binary_features_corr = []
+	discrete_nonbinary_features_corr = []
+	continuous_features_corr = []
+	class_imbalance_corr = []
+	
+	for model in models
+		model_accuracy = Symbol("$(model)_accuracy")
+		
+		push!(featurescorr, cor(cstats_filtered[!, model_accuracy], cstats_filtered.features))
+		push!(recordscorr, cor(cstats_filtered[!, model_accuracy], cstats_filtered.records))
+		push!(unique_target_features_corr, cor(cstats_filtered[!, model_accuracy], cstats_filtered.unique_target_features))
+		push!(binary_features_corr, cor(cstats_filtered[!, model_accuracy], cstats_filtered.binary_features))
+		push!(discrete_nonbinary_features_corr, cor(cstats_filtered[!, model_accuracy], cstats_filtered.discrete_nonbinary_features))
+		push!(continuous_features_corr, cor(cstats_filtered[!, model_accuracy], cstats_filtered.continuous_features))
+		push!(class_imbalance_corr, cor(cstats_filtered[!, model_accuracy], cstats_filtered.class_imbalance))
+	end
 
+	cordf = DataFrame(
+		:model => models,
+		:features => featurescorr,
+		:unique_target_features => unique_target_features_corr,
+		:binary_features => binary_features_corr,
+		:discrete_nonbinary_features => discrete_nonbinary_features_corr,
+		:continuous_features => continuous_features_corr,
+		:class_imbalance => class_imbalance_corr
+	)
+end
+
+# ╔═╡ 704a208c-0895-4e09-930b-e55f7d18c964
+cstats_filtered
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1518,11 +1582,14 @@ version = "1.4.1+0"
 # ╠═1eee8e44-c35e-4738-97ad-05b63312a03b
 # ╠═be3d487e-4c9b-463d-9bd7-d892febb301c
 # ╠═8dff5319-476a-4475-a6db-b7949e5ee17e
+# ╠═f4587166-bb8e-45f0-8c8f-e6754c8d458f
 # ╠═99a8addd-1c86-4a13-b48f-a1cfe50e530a
 # ╠═9a57f5ea-d97b-4401-a3ab-d7fb975f7cf8
 # ╠═999848fc-604c-4d4b-8080-578e689d8967
 # ╠═bd3989a2-4ac8-46c2-8680-77856755c383
+# ╠═ea7f8176-0fcc-4ec1-b73a-2d8bb7e554c4
 # ╠═96475426-fa8f-452a-89bb-a2babbefa8bd
 # ╠═4a045390-5041-45dc-a465-7b1df189eba4
+# ╠═704a208c-0895-4e09-930b-e55f7d18c964
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

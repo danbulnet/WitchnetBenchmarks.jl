@@ -163,6 +163,7 @@ begin
 	cordf = DataFrame(
 		:model => models,
 		:features => featurescorr,
+		:records => recordscorr,
 		:unique_target_features => unique_target_features_corr,
 		:binary_features => binary_features_corr,
 		:discrete_nonbinary_features => discrete_nonbinary_features_corr,
@@ -172,7 +173,220 @@ begin
 end
 
 # ╔═╡ 704a208c-0895-4e09-930b-e55f7d18c964
-cstats_filtered
+describe(cstats_filtered)
+
+# ╔═╡ d95a0f55-c113-4257-b344-2fc11dc58ed1
+function summarizeclassification(
+    results::Dict{Symbol, DataFrame};
+    save2csv::Union{String, Nothing}=nothing,
+    dataset_filter::Vector{Symbol}=[]
+)::DataFrame
+    accuracy = Dict{Symbol, Vector{Float64}}()
+    time = Dict{Symbol, Vector{Float64}}()
+    memory = Dict{Symbol, Vector{Float64}}()
+    for (name, benchmark) in results
+        if isempty(dataset_filter) || name in dataset_filter
+            for row in eachrow(benchmark)
+                model = Symbol(row.model)
+                accuracyvalue = if typeof(row.accuracy) <: Float64
+                    row.accuracy
+                else
+                    parse(Float64, row.accuracy)
+                end
+                timevalue = if typeof(row.time) <: Float64
+                    row.time
+                else
+                    parse(Float64, row.time)
+                end
+                memoryvalue = if typeof(row.memory) <: Float64
+                    row.memory
+                else
+                    parse(Float64, row.memory)
+                end
+                if haskey(accuracy, model)
+                    push!(accuracy[model], accuracyvalue)
+                    push!(time[model], timevalue)
+                    push!(memory[model], memoryvalue)
+                else
+                    accuracy[model] = [accuracyvalue]
+                    time[model] = [timevalue]
+                    memory[model] = [memoryvalue]
+                end
+            end
+        end
+    end
+    models = sort!(collect(keys(accuracy)))
+    df = DataFrame(
+        :model => models,
+        :accuracy => map(model -> mean(accuracy[model]), models),
+        :time => map(model -> mean(time[model]), models),
+        :memory => map(model -> mean(memory[model]), models),
+        :evaluated_datasets => map(model -> length(accuracy[model]), models),
+    )
+    sort!(df, [:accuracy, :time, :memory], rev=true)
+    if !isnothing(save2csv)
+        CSV.write(save2csv, df)
+    end
+    df
+end
+
+# ╔═╡ 4a656d28-803a-4df9-a86a-bb29f9bdcfa1
+md"##### fewer features"
+
+# ╔═╡ b7a3d982-1a60-4442-91c2-2ad205409ce4
+begin
+	cbench_best = copy(cbench)
+	for (dataset, results) in cbench_best
+		mask = map(results.model) do m
+			if startswith(string(m), "MAGDS_")
+				if string(m) == bestmagds true else false end
+			else
+				true
+			end
+		end
+		newresults = results[mask, :]
+		newresults[!, :model] = map(newresults.model) do m
+			if startswith(string(m), "MAGDS_")
+				:MAGDS
+			else
+				m
+			end
+		end
+		cbench_best[dataset] = newresults
+		
+	end
+	cbench_best
+end
+
+# ╔═╡ 3c46497c-2350-470d-a54c-229bb1e93bda
+begin
+	featuresmedian = median(cstats_filtered.features)
+	fewerfeatures_models = cstats_filtered[cstats_filtered.features .<= featuresmedian, :name]
+	fewerfeatures_results = summarizeclassification(cbench_best, dataset_filter=fewerfeatures_models)
+end
+
+# ╔═╡ 638a7c90-d3e6-4b20-80c2-a97861513f5b
+md"##### more features"
+
+# ╔═╡ 6080dfbc-62b9-47e1-87dc-9fbd809885b3
+begin
+	morefeatures_models = cstats_filtered[cstats_filtered.features .> featuresmedian, :name]
+	morefeatures_results = summarizeclassification(cbench_best, dataset_filter=morefeatures_models)
+end
+
+# ╔═╡ 3e0f1dd2-16cb-4aac-9a2e-47b5c9dbb4f7
+md"##### fewer records"
+
+# ╔═╡ cab61504-faab-413d-902a-29dc78320408
+begin
+	recordsmedian = median(cstats_filtered.records)
+	fewerrecords_models = cstats_filtered[cstats_filtered.records .<= recordsmedian, :name]
+	fewerrecords_results = summarizeclassification(cbench_best, dataset_filter=fewerrecords_models)
+end
+
+# ╔═╡ 1cdb36cc-9a84-4ab8-be70-40036630b8c1
+md"##### more records"
+
+# ╔═╡ 753211b6-4046-4ad5-bf0d-4c06e33eba98
+begin
+	morerecords_models = cstats_filtered[cstats_filtered.records .> recordsmedian, :name]
+	morerecords_results = summarizeclassification(cbench_best, dataset_filter=morerecords_models)
+end
+
+# ╔═╡ 57c43b7b-1c31-4856-8023-61c5bb866828
+md"##### fewer unique target features"
+
+# ╔═╡ 1b0b5a12-8a85-4257-9544-5c8b1ac9dcaf
+begin
+	unique_target_featuresmedian = median(cstats_filtered.unique_target_features)
+	fewerunique_target_features_models = cstats_filtered[cstats_filtered.unique_target_features .<= unique_target_featuresmedian, :name]
+	fewerunique_target_features_results = summarizeclassification(cbench_best, dataset_filter=fewerunique_target_features_models)
+end
+
+# ╔═╡ 20086433-04b6-4960-8361-3babdd7262c7
+md"##### more unique target features"
+
+# ╔═╡ c8869b9c-349d-4bbf-a6c5-0970c073f061
+begin
+	moreunique_target_features_models = cstats_filtered[cstats_filtered.unique_target_features .> unique_target_featuresmedian, :name]
+	moreunique_target_features_results = summarizeclassification(cbench_best, dataset_filter=moreunique_target_features_models)
+end
+
+# ╔═╡ eb64dcb1-fb5c-48e0-a475-3516297cf820
+md"##### fewer binary features"
+
+# ╔═╡ 1a4b3448-b4f7-4006-8c98-f0aeca505323
+begin
+	binary_featuresmedian = median(cstats_filtered.binary_features)
+	fewerbinary_features_models = cstats_filtered[cstats_filtered.binary_features .<= binary_featuresmedian, :name]
+	fewerbinary_features_results = summarizeclassification(cbench_best, dataset_filter=fewerbinary_features_models)
+end
+
+# ╔═╡ 77f0b8a2-35ae-47a3-97ca-c1e923ebf1da
+md"##### more binary features"
+
+# ╔═╡ 74963777-e6c3-4575-ac7d-dfea047878fa
+begin
+	morebinary_features_models = cstats_filtered[cstats_filtered.binary_features .> binary_featuresmedian, :name]
+	morebinary_features_results = summarizeclassification(cbench_best, dataset_filter=morebinary_features_models)
+end
+
+# ╔═╡ 10901425-7c1e-4566-a0ee-30884b2fa84a
+md"##### fewer discrete nonbinary features"
+
+# ╔═╡ b66d9371-1165-4c45-9e6d-557bb5f76ce9
+begin
+	discrete_nonbinary_featuresmedian = median(cstats_filtered.discrete_nonbinary_features)
+	fewerdiscrete_nonbinary_features_models = cstats_filtered[cstats_filtered.discrete_nonbinary_features .<= discrete_nonbinary_featuresmedian, :name]
+	fewerdiscrete_nonbinary_features_results = summarizeclassification(cbench_best, dataset_filter=fewerdiscrete_nonbinary_features_models)
+end
+
+# ╔═╡ 9ed250d8-967b-4c43-b906-1d0c25d7d4f1
+md"##### more discrete nonbinary features"
+
+# ╔═╡ 4b31929e-0ed6-4a6e-b4c5-7c41908ce813
+begin
+	morediscrete_nonbinary_features_models = cstats_filtered[cstats_filtered.discrete_nonbinary_features .> discrete_nonbinary_featuresmedian, :name]
+	morediscrete_nonbinary_features_results = summarizeclassification(cbench_best, dataset_filter=morediscrete_nonbinary_features_models)
+end
+
+# ╔═╡ 6503bed0-45ff-47e4-9e42-c8f80eae0814
+md"##### fewer continuous features"
+
+# ╔═╡ 8b3d1f3b-1173-48a5-a4eb-71ad7d445fe6
+begin
+	continuous_featuresmedian = median(cstats_filtered.continuous_features)
+	fewercontinuous_features_models = cstats_filtered[cstats_filtered.continuous_features .<= continuous_featuresmedian, :name]
+	fewercontinuous_features_results = summarizeclassification(cbench_best, dataset_filter=fewercontinuous_features_models)
+end
+
+# ╔═╡ 0ced8204-eae4-4b46-b0d6-b91bc94dad40
+md"##### more continuous features"
+
+# ╔═╡ 74d56ffe-ebcf-4f2c-9088-ca10e7f96292
+begin
+	morecontinuous_features_models = cstats_filtered[cstats_filtered.continuous_features .> continuous_featuresmedian, :name]
+	morecontinuous_features_results = summarizeclassification(cbench_best, dataset_filter=morecontinuous_features_models)
+end
+
+# ╔═╡ 50f9499e-a080-4c9c-a858-fae78a1ce373
+md"##### smaller class imbalance"
+
+# ╔═╡ ae7448b7-0547-49a0-afa9-d5392f9bf8d1
+begin
+	class_imbalancemedian = median(cstats_filtered.class_imbalance)
+	fewerclass_imbalance_models = cstats_filtered[cstats_filtered.class_imbalance .<= class_imbalancemedian, :name]
+	fewerclass_imbalance_results = summarizeclassification(cbench_best, dataset_filter=fewerclass_imbalance_models)
+end
+
+# ╔═╡ 8d1d1cb2-a10a-422a-b96d-ee47512040a2
+md"##### higher class imbalance"
+
+# ╔═╡ 4faa7697-986d-4a97-8832-1b84b3b0c9d8
+begin
+	moreclass_imbalance_models = cstats_filtered[cstats_filtered.class_imbalance .> class_imbalancemedian, :name]
+	moreclass_imbalance_results = summarizeclassification(cbench_best, dataset_filter=moreclass_imbalance_models)
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1591,5 +1805,35 @@ version = "1.4.1+0"
 # ╠═96475426-fa8f-452a-89bb-a2babbefa8bd
 # ╠═4a045390-5041-45dc-a465-7b1df189eba4
 # ╠═704a208c-0895-4e09-930b-e55f7d18c964
+# ╠═d95a0f55-c113-4257-b344-2fc11dc58ed1
+# ╟─4a656d28-803a-4df9-a86a-bb29f9bdcfa1
+# ╠═b7a3d982-1a60-4442-91c2-2ad205409ce4
+# ╠═3c46497c-2350-470d-a54c-229bb1e93bda
+# ╟─638a7c90-d3e6-4b20-80c2-a97861513f5b
+# ╠═6080dfbc-62b9-47e1-87dc-9fbd809885b3
+# ╟─3e0f1dd2-16cb-4aac-9a2e-47b5c9dbb4f7
+# ╠═cab61504-faab-413d-902a-29dc78320408
+# ╟─1cdb36cc-9a84-4ab8-be70-40036630b8c1
+# ╠═753211b6-4046-4ad5-bf0d-4c06e33eba98
+# ╟─57c43b7b-1c31-4856-8023-61c5bb866828
+# ╠═1b0b5a12-8a85-4257-9544-5c8b1ac9dcaf
+# ╟─20086433-04b6-4960-8361-3babdd7262c7
+# ╠═c8869b9c-349d-4bbf-a6c5-0970c073f061
+# ╟─eb64dcb1-fb5c-48e0-a475-3516297cf820
+# ╠═1a4b3448-b4f7-4006-8c98-f0aeca505323
+# ╟─77f0b8a2-35ae-47a3-97ca-c1e923ebf1da
+# ╠═74963777-e6c3-4575-ac7d-dfea047878fa
+# ╟─10901425-7c1e-4566-a0ee-30884b2fa84a
+# ╠═b66d9371-1165-4c45-9e6d-557bb5f76ce9
+# ╟─9ed250d8-967b-4c43-b906-1d0c25d7d4f1
+# ╠═4b31929e-0ed6-4a6e-b4c5-7c41908ce813
+# ╟─6503bed0-45ff-47e4-9e42-c8f80eae0814
+# ╠═8b3d1f3b-1173-48a5-a4eb-71ad7d445fe6
+# ╟─0ced8204-eae4-4b46-b0d6-b91bc94dad40
+# ╠═74d56ffe-ebcf-4f2c-9088-ca10e7f96292
+# ╟─50f9499e-a080-4c9c-a858-fae78a1ce373
+# ╠═ae7448b7-0547-49a0-afa9-d5392f9bf8d1
+# ╟─8d1d1cb2-a10a-422a-b96d-ee47512040a2
+# ╠═4faa7697-986d-4a97-8832-1b84b3b0c9d8
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

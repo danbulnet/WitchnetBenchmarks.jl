@@ -83,9 +83,10 @@ function estimateall(
     results
 end
 
-function collectbenchmarks(dataset::String="penn")::Dict{Symbol, DataFrame}
+function collectbenchmarks(
+    benchmarkdir::String=joinpath(Utils.BENCHMARK_DIR, dataset)
+)::Dict{Symbol, DataFrame}
     results = Dict{Symbol, DataFrame}()
-    benchmarkdir = joinpath(Utils.BENCHMARK_DIR, dataset)
     for file in readdir(benchmarkdir)
         df = CSV.File(joinpath(benchmarkdir, file)) |> DataFrame
         results[Symbol(chop(file, tail=4))] = df
@@ -96,7 +97,7 @@ end
 function summarizeclassification(
     results::Dict{Symbol, DataFrame};
     save2csv::Union{String, Nothing}=nothing,
-    dataset_filter::Vector{Symbol}=[]
+    dataset_filter::Vector{Symbol}=Symbol[]
 )::DataFrame
     accuracy = Dict{Symbol, Vector{Float64}}()
     time = Dict{Symbol, Vector{Float64}}()
@@ -150,7 +151,7 @@ end
 function summarizeregression(
     results::Dict{Symbol, DataFrame};
     save2csv::Union{String, Nothing}=nothing,
-    dataset_filter::Vector{Symbol}=[]
+    dataset_filter::Vector{Symbol}=Symbol[]
 )::DataFrame
     nrmse = Dict{Symbol, Vector{Float64}}()
     time = Dict{Symbol, Vector{Float64}}()

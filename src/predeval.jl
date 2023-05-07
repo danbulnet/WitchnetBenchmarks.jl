@@ -254,7 +254,11 @@ function magds_grid(
                                                         Float32(ssth)   
                                                     )
                                                 end
-                                                asyncadd(benchmarks, ModelBenchmark(modelname, result, time, mem))
+                                                if result >= 0
+                                                    asyncadd(benchmarks, ModelBenchmark(modelname, result, time, mem))
+                                                else
+                                                    @error modelname, "result ==", result
+                                                end
                                                 lock(counterlock)
                                                 try
                                                     if i == 1 || i % 100 == 0

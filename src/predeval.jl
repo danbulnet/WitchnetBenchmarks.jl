@@ -201,8 +201,8 @@ function magds_grid(
     ieth=[0.00001, 0.99],
     iee=[1, 3, 5],
     winnerslimit=[100, 500],
-    weightratio=[1.0, 1.1, 1.25, 1.5, 2.5],
-    alpha=[0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001],
+    weightratio=[1.0, 1.1, 1.25, 1.5, 2.0],
+    alpha=[0.1, 0.01, 0.001, 0.0001, 0.00001],
     epoch=[0, 3, 8],
     include_input_sensor_priority=[true, false],
     signal_similarity_threshold=[0.0, 0.97]

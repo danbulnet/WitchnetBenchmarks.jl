@@ -1,6 +1,6 @@
 export warmup, predictall, classifyall, estimateall, 
     summarizeall, summarizeclassification, summarizeregression, 
-    collectbenchmarks, filterbest
+    collectbenchmarks, filterbest, dropmissing, cleanbenchmark
 
 using Statistics
 
@@ -256,4 +256,31 @@ function filterbest(
     end
     push!(result, winner)
     sort!(result, [measure], rev=true)
+end
+
+function dropmissing(results::Dict{Symbol, DataFrame})::Dict{Symbol, DataFrame}
+    nomodels = maximum(unique(size.(values(results), 1)))
+    ret = Dict{Symbol, DataFrame}()
+    for (dataset, df) in results
+        if size(df, 1) == nomodels
+            ret[dataset] = df
+        else
+            println("dropping $dataset")
+        end
+    end
+    ret
+end
+
+function cleanbenchmark(dir, results::Dict{Symbol, DataFrame})
+    counter = 0
+    @info keys(results)
+    for file in readdir(dir)
+        dataset = lowercase(split(chop(file, tail=4), "penn_regression_")[2])
+        if !(dataset in lowercase.(string.(keys(results))))
+            @info "removing", file, "from directory", dir
+            counter += 1
+            rm(joinpath(dir, file); force=true)
+        end
+    end
+    @info "removed", counter, "files"
 end

@@ -98,7 +98,7 @@ fast_regression_models() = Dict(
 
 function fast_regression_models_magds()
     models = fast_regression_models()
-    models[:MAGDS_one] = () -> nothing
+    models[:MAGDS_one_regression] = () -> nothing
     models
 end
 
@@ -121,7 +121,7 @@ end
 
 function regression_models_magds()
     models = regression_models()
-    models[:MAGDS_one] = () -> nothing
+    models[:MAGDS_one_regression] = () -> nothing
     models
 end
 
@@ -146,6 +146,10 @@ magds_model() = Dict(
 
 one_magds_model() = Dict(
     :MAGDS_one => nothing
+)
+
+one_magds_regression_model() = Dict(
+    :MAGDS_one_regression => nothing
 )
 
 magds_gridsearch_models() = Dict(

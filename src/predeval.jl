@@ -150,6 +150,23 @@ function evalmodels(
                 signal_similarity_threshold=[0.97]
             )
             Logging.disable_logging(Logging.Warn)
+        elseif name == :MAGDS_one_regression
+            Logging.disable_logging(Logging.Debug)
+            magds_grid(
+                data, target, metric, benchmarks, ttratio, seed;
+                weightingstrategy=["OneOverOutsUpperQuarter"],
+                fuzzy=[true],
+                weighted=[true],
+                ieth=[0.00001],
+                iee=[1],
+                winnerslimit=[500],
+                weightratio=[1.5],
+                alpha=[1.0e-5],
+                epoch=[8],
+                include_input_sensor_priority=[false],
+                signal_similarity_threshold=[0.0]
+            )
+            Logging.disable_logging(Logging.Warn)
         elseif name == :MAGDS_gridsearch
             Logging.disable_logging(Logging.Debug)
             magds_grid(data, target, metric, benchmarks, ttratio, seed)
@@ -181,12 +198,12 @@ function magds_grid(
     weightingstrategy=["ConstantOneWeight", "OneOverOuts", "OneOverOutsUpperHalf", "OneOverOutsUpperQuarter"],
     fuzzy=[true, false],
     weighted=[true, false],
-    ieth=[0.00001, 0.1, 0.9, 0.99],
-    iee=1:5,
-    winnerslimit=[1, 2, 5, 20, 100, 500],
-    weightratio=[1.0, 1.1, 1.25, 1.5, 2.0, 3.0, 5.0],
+    ieth=[0.00001, 0.99],
+    iee=[1, 3, 5],
+    winnerslimit=[100, 500],
+    weightratio=[1.0, 1.1, 1.25, 1.5, 2.5],
     alpha=[0.1, 0.01, 0.001, 0.0001, 0.00001, 0.000001],
-    epoch=[0, 1, 2, 3, 4, 5],
+    epoch=[0, 3, 8],
     include_input_sensor_priority=[true, false],
     signal_similarity_threshold=[0.0, 0.97]
 )

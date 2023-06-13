@@ -180,7 +180,7 @@ function evalmodels(
                 end
                 asyncadd(benchmarks, ModelBenchmark(name, result, time, mem))
             catch e
-                @error "error predicting $name, skipping"
+                @error "error predicting $name, skipping, error: \n$e\n"
             end
         end
     end
@@ -198,8 +198,8 @@ function magds_grid(
     weightingstrategy=["ConstantOneWeight", "OneOverOuts", "OneOverOutsUpperHalf", "OneOverOutsUpperQuarter"],
     fuzzy=[true, false],
     weighted=[true, false],
-    ieth=[0.00001, 0.99],
-    iee=[1, 3, 5],
+    ieth=[0.00001],
+    iee=[1],
     winnerslimit=[100, 500],
     weightratio=[1.0, 1.1, 1.25, 1.5, 2.0],
     alpha=[0.1, 0.01, 0.001, 0.0001, 0.00001],

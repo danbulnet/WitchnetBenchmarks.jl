@@ -57,19 +57,19 @@ function value_barplot(
         Scale.color_discrete_manual(palette...),
         Guide.title(title),
         Guide.xlabel(xlabel), Guide.ylabel(ylabel),
-        Guide.annotation(
-            compose(
-                context(),
-                text(
-                    df[!, y] .- maxy * 0.03,
-                    1:length(df[!, y]),
-                    string.(round.(df[!, y], digits=5)),
-                    [hright for x in df[!, y]],
-                    [vcenter for x in df[!, y]],
-                ),
-                fontsize(2.5),
-                fill("black")
-            )
-        )
+        # Guide.annotation(
+        #     compose(
+        #         context(),
+        #         text(
+        #             df[!, y] .- maxy * 0.03,
+        #             1:length(df[!, y]),
+        #             string.(round.(df[!, y], digits=5)),
+        #             [hright for x in df[!, y]],
+        #             [vcenter for x in df[!, y]],
+        #         ),
+        #         fontsize(2.5),
+        #         fill("black")
+        #     )
+        # )
     )
 end

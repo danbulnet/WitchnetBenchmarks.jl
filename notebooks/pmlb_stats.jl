@@ -40,7 +40,7 @@ html"""
 begin
 	rootdir = normpath(joinpath(@__DIR__, ".."))
 	datadir = joinpath(rootdir, "data/PMLB") |> normpath
-	benchmarkdir = raw"D:\Science\Results\WitchnetBenchmarks\penn_regression_19" |> normpath
+	benchmarkdir = raw"D:\Science\Results\WitchnetBenchmarks\penn_regression_55" |> normpath
 end
 
 # ╔═╡ 4da7fdd1-0e74-4f69-a3b3-1eab100105df
@@ -50,13 +50,13 @@ function collectbenchmarks(benchmarkdir=benchmarkdir, prefix="penn_regression_")
         df = CSV.File(joinpath(benchmarkdir, file)) |> DataFrame
 
 		index = nothing
-		for (i, model) in enumerate(df.model)
-			if startswith(model, "MAGDS_")
-				index = i
-			else
-				df[i, :model] = split(df[i, :model], "_") |> first
-			end	
-		end
+			for (i, model) in enumerate(df.model)
+				if startswith(model, "MAGDS_")
+					index = i
+				else
+					df[i, :model] = split(df[i, :model], "_") |> first
+				end	
+			end
 		df[index, :model] = "MAGDS"
         
 		results[Symbol(split(chop(file, tail=4), prefix)[2])] = df
@@ -66,8 +66,7 @@ end
 
 # ╔═╡ 3e5d98bb-c98a-4c4b-b5f6-2eae4b432d07
 begin
-	rbench = collectbenchmarks();
-	delete!(rbench, :magds_1k)
+	rbench = collectbenchmarks()
 	length(rbench), rbench
 end
 
@@ -85,11 +84,56 @@ begin
 	nrmses
 end
 
+# ╔═╡ e150789e-c016-40a7-90c5-376ba40cdb44
+begin
+	times = Dict{String, Vector{Float64}}()
+	for model in last(first(rbench)).model
+		times[model] = []
+	end
+	for df in values(rbench)
+		for row in eachrow(df)
+			times[row.model] = push!(times[row.model], row.time)
+		end
+	end
+	times
+end
+
+# ╔═╡ b0c9a475-a10d-43a1-ac2d-57a08b356c0d
+md"### nrmses"
+
 # ╔═╡ 5b10b109-993c-4ca2-bedf-3774d1fac7a2
 (
 	"MAGDS vs RandomForestRegressor",
 	("ftest" => VarianceFTest(nrmses["MAGDS"], nrmses["RandomForestRegressor"]) |> pvalue),
 	("ttest" => EqualVarianceTTest(nrmses["MAGDS"], nrmses["RandomForestRegressor"]) |> pvalue)
+)
+
+# ╔═╡ 1694d438-9273-4011-9534-2f7b8d8951a1
+(
+	"MAGDS vs KNNRegressor",
+	("ftest" => VarianceFTest(nrmses["MAGDS"], nrmses["KNNRegressor"]) |> pvalue),
+	("ttest" => EqualVarianceTTest(nrmses["MAGDS"], nrmses["KNNRegressor"]) |> pvalue)
+)
+
+# ╔═╡ a43ef5db-7507-4507-900d-fc9dc7ce6b8a
+(
+	"MAGDS vs EvoTreeRegressor",
+	("ftest" => VarianceFTest(nrmses["MAGDS"], nrmses["EvoTreeRegressor"]) |> pvalue),
+	("ttest" => UnequalVarianceTTest(nrmses["MAGDS"], nrmses["EvoTreeRegressor"]) |> pvalue)
+)
+
+# ╔═╡ 9e7b4af2-71b1-444d-8577-d6239803e864
+(
+	"MAGDS vs LinearRegressor",
+	("ftest" => VarianceFTest(nrmses["MAGDS"], nrmses["LinearRegressor"]) |> pvalue),
+	("ttest" => UnequalVarianceTTest(nrmses["MAGDS"], nrmses["LinearRegressor"]) |> pvalue)
+)
+
+# ╔═╡ ddac1846-5a89-4e9b-90f5-de8d53f6049a
+(
+	"MAGDS vs DecisionTreeRegressor",
+	("ftest" => VarianceFTest(nrmses["MAGDS"], nrmses["DecisionTreeRegressor"]) |> pvalue),
+	("ttest" => UnequalVarianceTTest(nrmses["MAGDS"], nrmses["DecisionTreeRegressor"]) |> pvalue)
 )
 
 # ╔═╡ c9e3a3b2-a72d-429f-b74d-f9d3077be93a
@@ -101,16 +145,61 @@ end
 
 # ╔═╡ 68a83bfd-4e20-4ddb-823a-1a36573da8f3
 (
-	"MAGDS vs LinearRegressor",
-	("ftest" => VarianceFTest(nrmses["MAGDS"], nrmses["LinearRegressor"]) |> pvalue),
-	("ttest" => UnequalVarianceTTest(nrmses["MAGDS"], nrmses["LinearRegressor"]) |> pvalue)
+	"MAGDS vs LGBMRegressor",
+	("ftest" => VarianceFTest(nrmses["MAGDS"], nrmses["LGBMRegressor"]) |> pvalue),
+	("ttest" => UnequalVarianceTTest(nrmses["MAGDS"], nrmses["LGBMRegressor"]) |> pvalue)
 )
 
-# ╔═╡ a8e67622-6173-45e1-a318-139e2d004092
+# ╔═╡ 5ef20fa2-6484-447a-bee7-23e8e1483a89
+md"### times"
+
+# ╔═╡ 6e6faeb6-aaf2-4421-b10c-566124d3fe9a
 (
-	"LGBMRegressor vs RandomForestRegressor",
-	("ftest" => VarianceFTest(nrmses["LGBMRegressor"], nrmses["RandomForestRegressor"]) |> pvalue),
-	("ttest" => UnequalVarianceTTest(nrmses["LGBMRegressor"], nrmses["RandomForestRegressor"]) |> pvalue)
+	"MAGDS vs RandomForestRegressor",
+	("ftest" => VarianceFTest(times["MAGDS"], times["RandomForestRegressor"]) |> pvalue),
+	("ttest" => UnequalVarianceTTest(times["MAGDS"], times["RandomForestRegressor"]) |> pvalue)
+)
+
+# ╔═╡ a3c890ed-4546-406e-9787-b5c95e423be6
+(
+	"MAGDS vs KNNRegressor",
+	("ftest" => VarianceFTest(times["MAGDS"], times["KNNRegressor"]) |> pvalue),
+	("ttest" => UnequalVarianceTTest(times["MAGDS"], times["KNNRegressor"]) |> pvalue)
+)
+
+# ╔═╡ eeb49d14-9773-4f94-b511-bf51df37e346
+(
+	"MAGDS vs EvoTreeRegressor",
+	("ftest" => VarianceFTest(times["MAGDS"], times["EvoTreeRegressor"]) |> pvalue),
+	("ttest" => UnequalVarianceTTest(times["MAGDS"], times["EvoTreeRegressor"]) |> pvalue)
+)
+
+# ╔═╡ d09370a6-8180-4427-9f5b-a882acd6533a
+(
+	"MAGDS vs LinearRegressor",
+	("ftest" => VarianceFTest(times["MAGDS"], times["LinearRegressor"]) |> pvalue),
+	("ttest" => UnequalVarianceTTest(times["MAGDS"], times["LinearRegressor"]) |> pvalue)
+)
+
+# ╔═╡ 05fe2ae4-e800-43ea-a90d-c008c4c978b0
+(
+	"MAGDS vs DecisionTreeRegressor",
+	("ftest" => VarianceFTest(times["MAGDS"], times["DecisionTreeRegressor"]) |> pvalue),
+	("ttest" => UnequalVarianceTTest(times["MAGDS"], times["DecisionTreeRegressor"]) |> pvalue)
+)
+
+# ╔═╡ 77e83860-ab5e-4662-81e2-9af18433c127
+(
+	"MAGDS vs NeuralNetworkRegressor",
+	("ftest" => VarianceFTest(times["MAGDS"], times["NeuralNetworkRegressor"]) |> pvalue),
+	("ttest" => UnequalVarianceTTest(times["MAGDS"], times["NeuralNetworkRegressor"]) |> pvalue)
+)
+
+# ╔═╡ 2305d410-72ce-4909-b920-ef47a35e6e15
+(
+	"MAGDS vs LGBMRegressor",
+	("ftest" => VarianceFTest(times["MAGDS"], times["LGBMRegressor"]) |> pvalue),
+	("ttest" => UnequalVarianceTTest(times["MAGDS"], times["LGBMRegressor"]) |> pvalue)
 )
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -942,9 +1031,22 @@ version = "17.4.0+0"
 # ╠═4da7fdd1-0e74-4f69-a3b3-1eab100105df
 # ╠═3e5d98bb-c98a-4c4b-b5f6-2eae4b432d07
 # ╠═9bcb8c10-c286-4717-abf7-959f1c8de70a
+# ╠═e150789e-c016-40a7-90c5-376ba40cdb44
+# ╟─b0c9a475-a10d-43a1-ac2d-57a08b356c0d
 # ╠═5b10b109-993c-4ca2-bedf-3774d1fac7a2
+# ╠═1694d438-9273-4011-9534-2f7b8d8951a1
+# ╠═a43ef5db-7507-4507-900d-fc9dc7ce6b8a
+# ╠═9e7b4af2-71b1-444d-8577-d6239803e864
+# ╠═ddac1846-5a89-4e9b-90f5-de8d53f6049a
 # ╠═c9e3a3b2-a72d-429f-b74d-f9d3077be93a
 # ╠═68a83bfd-4e20-4ddb-823a-1a36573da8f3
-# ╠═a8e67622-6173-45e1-a318-139e2d004092
+# ╟─5ef20fa2-6484-447a-bee7-23e8e1483a89
+# ╠═6e6faeb6-aaf2-4421-b10c-566124d3fe9a
+# ╠═a3c890ed-4546-406e-9787-b5c95e423be6
+# ╠═eeb49d14-9773-4f94-b511-bf51df37e346
+# ╠═d09370a6-8180-4427-9f5b-a882acd6533a
+# ╠═05fe2ae4-e800-43ea-a90d-c008c4c978b0
+# ╠═77e83860-ab5e-4662-81e2-9af18433c127
+# ╠═2305d410-72ce-4909-b920-ef47a35e6e15
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

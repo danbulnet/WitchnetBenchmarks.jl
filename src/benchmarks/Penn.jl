@@ -15,7 +15,7 @@ const TRAIN_TEST_DATA_DIR = "data/PMLB_train_test"
 "classification task on the boston housing dataset"
 function classify(;
     cluster::Symbol=:all,
-    limit::Union{Int, Nothing}=1000, filter::Vector{String}=[],
+    limit::Union{Int, Nothing}=1000, skip::Vector{Symbol}=[],
     measure::Symbol=:accuracy, 
     models=fast_classification_models(),
     ttratio=0.7, seed=58, standarize=true, onehot=false, savett=false
@@ -26,7 +26,7 @@ function classify(;
     results = []
     # Threads.@threads for (name, df) in collect(data)
     for (name, df) in collect(data)
-        if name in filter
+        if name in skip
             @info "skipping", name
             continue
         end
@@ -70,7 +70,7 @@ end
 "regression task on the boston housing dataset"
 function estimate(;
     cluster::Symbol=:all,
-    limit::Union{Int, Nothing}=1000, filter::Vector{String}=[],
+    limit::Union{Int, Nothing}=1000, skip::Vector{Symbol}=[],
     measure::Symbol=:nrmse,
     models=fast_regression_models(),
     ttratio=0.7, seed=58, standarize=true, onehot=false, savett=false
@@ -78,7 +78,7 @@ function estimate(;
     data = PMLB.loaddata(task=:regression, cluster=cluster, limit=limit)
     results = []
     for (name, df) in data
-        if name in filter
+        if name in skip
             @info "skipping", name
             continue
         end

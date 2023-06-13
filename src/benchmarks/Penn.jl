@@ -26,7 +26,7 @@ function classify(;
     results = []
     # Threads.@threads for (name, df) in collect(data)
     for (name, df) in collect(data)
-        if !name in filter
+        if !(name in filter)
             @info "skipping", name
             continue
         end
@@ -78,7 +78,7 @@ function estimate(;
     data = PMLB.loaddata(task=:regression, cluster=cluster, limit=limit)
     results = []
     for (name, df) in data
-        if !name in filter
+        if !(name in filter)
             @info "skipping", name
             continue
         end
